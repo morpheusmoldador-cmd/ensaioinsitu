@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ensaio In Situ - Compactação Precisa</title>
+    <title>Ensaio In Situ - Densidade Editável</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -58,7 +58,11 @@
         </div>
     </div>
 
-    <div class="section-title">Frasco de Areia (D = 1.418)</div>
+    <div class="section-title">Frasco de Areia</div>
+    <div class="input-group">
+        <label>Densidade da Areia (g/cm³)</label>
+        <input type="number" id="densAreia" value="1.418" step="0.001">
+    </div>
     <div class="grid">
         <div class="input-group">
             <label>P. Inicial (g)</label>
@@ -106,7 +110,6 @@
 
 <script>
     let modoAtual = 'aterro';
-    const densidadeAreiaPadrao = 1.418; 
 
     function setModo(modo, btn) {
         modoAtual = modo;
@@ -118,6 +121,7 @@
     function calcular() {
         const dMaxLab = parseFloat(document.getElementById('densMax').value);
         const hOtima = parseFloat(document.getElementById('umiOti').value);
+        const densAreia = parseFloat(document.getElementById('densAreia').value);
         const pAntes = parseFloat(document.getElementById('pFrascoAntes').value);
         const pDepois = parseFloat(document.getElementById('pFrascoDepois').value);
         const pFunil = parseFloat(document.getElementById('pFunil').value);
@@ -126,7 +130,7 @@
         const pASeca = parseFloat(document.getElementById('pAmostraSeca').value);
         const pTara = parseFloat(document.getElementById('pTara').value);
 
-        if ([dMaxLab, hOtima, pAntes, pDepois, pFunil, pSUmidoFuro, pAUmida, pASeca].some(isNaN)) {
+        if ([dMaxLab, hOtima, densAreia, pAntes, pDepois, pFunil, pSUmidoFuro, pAUmida, pASeca].some(isNaN)) {
             alert("Preencha todos os campos.");
             return;
         }
@@ -136,13 +140,13 @@
 
         // 2. Volume do Furo (cm³)
         const massaAreiaFuro = (pAntes - pDepois) - pFunil;
-        const volumeFuro = massaAreiaFuro / densidadeAreiaPadrao;
+        const volumeFuro = massaAreiaFuro / densAreia;
 
         // 3. Densidade Seca Campo (g/cm³)
         const densidadeUmidaCampo = pSUmidoFuro / volumeFuro;
         const densidadeSecaCampo = densidadeUmidaCampo / (1 + (umidadeReal / 100));
 
-        // 4. Grau de Compactação (%) - Ajustado para 4 casas decimais
+        // 4. Grau de Compactação (%) - 4 casas decimais
         const gc = (densidadeSecaCampo * 100000 / dMaxLab) ;
         
         // 5. Tolerâncias
@@ -152,7 +156,6 @@
         const divRes = document.getElementById('resultado');
         divRes.style.display = 'block';
         
-        // Exibição do GC com .toFixed(4)
         document.getElementById('detalhes').innerHTML = `
             <strong>Volume do Furo:</strong> ${volumeFuro.toFixed(2)} cm³<br>
             <strong>Umidade Real:</strong> ${umidadeReal.toFixed(2)}%<br>
