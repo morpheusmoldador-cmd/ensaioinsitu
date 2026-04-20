@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ensaio In Situ - Compactação Precisa</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --bg: #f1f5f9;
+        }
+
+        body { font-family: sans-serif; background-color: var(--bg); margin: 0; padding: 10px; display: flex; justify-content: center; }
+        .container { background: white; width: 100%; max-width: 450px; padding: 20px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #1e293b; font-size: 1.1rem; margin-bottom: 15px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
+        
+        .section-title { font-size: 0.85rem; color: var(--primary); font-weight: bold; margin: 15px 0 8px 0; text-transform: uppercase; }
+        
+        .button-group { display: flex; gap: 8px; margin-bottom: 15px; }
+        .btn-toggle { flex: 1; padding: 10px; border: none; border-radius: 6px; background: #cbd5e1; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .btn-toggle.active { background: var(--primary); color: white; }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .input-group { margin-bottom: 10px; }
+        label { display: block; margin-bottom: 3px; color: #475569; font-size: 11px; font-weight: bold; }
+        input { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 14px; background: #fdfdfd; }
+        
+        #btnCalcular { width: 100%; padding: 15px; background: #0f172a; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; margin-top: 15px; cursor: pointer; }
+        
+        #resultado { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; }
+        .card-result { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px; margin-top: 10px; font-size: 13px; line-height: 1.7; color: #334155; }
+        .status { text-align: center; font-size: 18px; font-weight: bold; margin-top: 10px; padding: 10px; border-radius: 6px; }
+        .passou { background: #dcfce7; color: var(--success); border: 1px solid var(--success); }
+        .reprovou { background: #fee2e2; color: var(--danger); border: 1px solid var(--danger); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Ensaio de Compactação</h2>
+
+    <div class="button-group">
+        <button class="btn-toggle active" onclick="setModo('aterro', this)">Aterro (±3%)</button>
+        <button class="btn-toggle" onclick="setModo('cft', this)">CFT (±2%)</button>
+    </div>
+
+    <div class="section-title">Dados de Laboratório</div>
+    <div class="grid">
+        <div class="input-group">
+            <label>Dens. Máx. Seca (Lab)</label>
+            <input type="number" id="densMax" placeholder="g/cm³" step="0.001">
+        </div>
+        <div class="input-group">
+            <label>Umidade Ótima (%)</label>
+            <input type="number" id="umiOti" placeholder="%" step="0.1">
+        </div>
+    </div>
+
+    <div class="section-title">Frasco de Areia (D = 1.418)</div>
+    <div class="grid">
+        <div class="input-group">
+            <label>P. Inicial (g)</label>
+            <input type="number" id="pFrascoAntes">
+        </div>
+        <div class="input-group">
+            <label>P. Final (g)</label>
+            <input type="number" id="pFrascoDepois">
+        </div>
+    </div>
+    <div class="input-group">
+        <label>Peso Areia Funil (g)</label>
+        <input type="number" id="pFunil">
+    </div>
+
+    <div class="section-title">Solo do Furo</div>
+    <div class="input-group">
+        <label>Peso Solo Úmido Total (g)</label>
+        <input type="number" id="pSoloUmidoFuro" placeholder="Massa úmida do furo">
+    </div>
+
+    <div class="section-title">Amostra para Umidade</div>
+    <div class="grid">
+        <div class="input-group">
+            <label>P. Amostra Úmida + Tara (g)</label>
+            <input type="number" id="pAmostraUmida">
+        </div>
+        <div class="input-group">
+            <label>P. Amostra Seca + Tara (g)</label>
+            <input type="number" id="pAmostraSeca">
+        </div>
+    </div>
+    <div class="input-group">
+        <label>Peso da Tara (g)</label>
+        <input type="number" id="pTara" value="0">
+    </div>
+
+    <button id="btnCalcular" onclick="calcular()">CALCULAR E VERIFICAR</button>
+
+    <div id="resultado">
+        <div class="card-result" id="detalhes"></div>
+        <div id="statusFinal" class="status"></div>
+    </div>
+</div>
+
+<script>
+    let modoAtual = 'aterro';
+    const densidadeAreiaPadrao = 1.418; 
+
+    function setModo(modo, btn) {
+        modoAtual = modo;
+        document.querySelectorAll('.btn-toggle').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('resultado').style.display = 'none';
+    }
+
+    function calcular() {
+        const dMaxLab = parseFloat(document.getElementById('densMax').value);
+        const hOtima = parseFloat(document.getElementById('umiOti').value);
+        const pAntes = parseFloat(document.getElementById('pFrascoAntes').value);
+        const pDepois = parseFloat(document.getElementById('pFrascoDepois').value);
+        const pFunil = parseFloat(document.getElementById('pFunil').value);
+        const pSUmidoFuro = parseFloat(document.getElementById('pSoloUmidoFuro').value);
+        const pAUmida = parseFloat(document.getElementById('pAmostraUmida').value);
+        const pASeca = parseFloat(document.getElementById('pAmostraSeca').value);
+        const pTara = parseFloat(document.getElementById('pTara').value);
+
+        if ([dMaxLab, hOtima, pAntes, pDepois, pFunil, pSUmidoFuro, pAUmida, pASeca].some(isNaN)) {
+            alert("Preencha todos os campos.");
+            return;
+        }
+
+        // 1. Umidade da Amostra (%)
+        const umidadeReal = ((pAUmida - pASeca) / (pASeca - pTara)) * 100;
+
+        // 2. Volume do Furo (cm³)
+        const massaAreiaFuro = (pAntes - pDepois) - pFunil;
+        const volumeFuro = massaAreiaFuro / densidadeAreiaPadrao;
+
+        // 3. Densidade Seca Campo (g/cm³)
+        const densidadeUmidaCampo = pSUmidoFuro / volumeFuro;
+        const densidadeSecaCampo = densidadeUmidaCampo / (1 + (umidadeReal / 100));
+
+        // 4. Grau de Compactação (%) - Ajustado para 4 casas decimais
+        const gc = (densidadeSecaCampo * 100000 / dMaxLab) ;
+        
+        // 5. Tolerâncias
+        const desvio = umidadeReal - hOtima;
+        const tolerancia = (modoAtual === 'aterro') ? 3 : 2;
+
+        const divRes = document.getElementById('resultado');
+        divRes.style.display = 'block';
+        
+        // Exibição do GC com .toFixed(4)
+        document.getElementById('detalhes').innerHTML = `
+            <strong>Volume do Furo:</strong> ${volumeFuro.toFixed(2)} cm³<br>
+            <strong>Umidade Real:</strong> ${umidadeReal.toFixed(2)}%<br>
+            <strong>Densidade Seca Campo:</strong> ${densidadeSecaCampo.toFixed(3)} g/cm³<br>
+            <strong>Grau de Compactação:</strong> ${gc.toFixed(4)}%<br>
+            <strong>Desvio Umidade:</strong> ${desvio.toFixed(2)}% (Margem: ±${tolerancia}%)
+        `;
+
+        const aprovadoGC = gc >= 100;
+        const aprovadoUmi = Math.abs(desvio) <= tolerancia;
+
+        const divStatus = document.getElementById('statusFinal');
+        if (aprovadoGC && aprovadoUmi) {
+            divStatus.className = 'status passou';
+            divStatus.innerHTML = "APROVADO ✅";
+        } else {
+            divStatus.className = 'status reprovou';
+            let msg = "REPROVADO ❌<br><small style='font-size:12px'>";
+            if(!aprovadoGC) msg += "- Compactação abaixo de 100%<br>";
+            if(!aprovadoUmi) msg += `- Umidade fora da margem (±${tolerancia}%)`;
+            divStatus.innerHTML = msg + "</small>";
+        }
+    }
+</script>
+
+</body>
+</html>
