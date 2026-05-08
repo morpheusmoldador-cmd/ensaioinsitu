@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ensaio In Situ - Densidade Editável</title>
+    <title>Ensaio In Situ - Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --primary: #2563eb;
@@ -16,7 +17,7 @@
         .container { background: white; width: 100%; max-width: 450px; padding: 20px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: #1e293b; font-size: 1.1rem; margin-bottom: 15px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
         
-        .section-title { font-size: 0.85rem; color: var(--primary); font-weight: bold; margin: 15px 0 8px 0; text-transform: uppercase; }
+        .section-title { font-size: 0.85rem; color: var(--primary); font-weight: bold; margin: 15px 0 8px 0; text-transform: uppercase; border-left: 3px solid var(--primary); padding-left: 5px; }
         
         .button-group { display: flex; gap: 8px; margin-bottom: 15px; }
         .btn-toggle { flex: 1; padding: 10px; border: none; border-radius: 6px; background: #cbd5e1; cursor: pointer; font-weight: bold; font-size: 13px; }
@@ -28,20 +29,39 @@
         input { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 14px; background: #fdfdfd; }
         
         #btnCalcular { width: 100%; padding: 15px; background: #0f172a; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; margin-top: 15px; cursor: pointer; }
+        #btnDownload { width: 100%; padding: 10px; background: #64748b; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; margin-top: 10px; cursor: pointer; display: none; }
         
         #resultado { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; }
         .card-result { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px; margin-top: 10px; font-size: 13px; line-height: 1.7; color: #334155; }
         .status { text-align: center; font-size: 18px; font-weight: bold; margin-top: 10px; padding: 10px; border-radius: 6px; }
         .passou { background: #dcfce7; color: var(--success); border: 1px solid var(--success); }
         .reprovou { background: #fee2e2; color: var(--danger); border: 1px solid var(--danger); }
+        
+        .no-print { margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="container" id="printableArea">
     <h2>Ensaio de Compactação</h2>
 
-    <div class="button-group">
+    <div class="section-title">Identificação</div>
+    <div class="input-group">
+        <label>Número de Registro</label>
+        <input type="text" id="registro" placeholder="Ex: REG-2024-001">
+    </div>
+    <div class="grid">
+        <div class="input-group">
+            <label>Estaca Inicial</label>
+            <input type="text" id="estacaIni" placeholder="0+000">
+        </div>
+        <div class="input-group">
+            <label>Estaca Final</label>
+            <input type="text" id="estacaFin" placeholder="0+020">
+        </div>
+    </div>
+
+    <div class="button-group no-print">
         <button class="btn-toggle active" onclick="setModo('aterro', this)">Aterro (±3%)</button>
         <button class="btn-toggle" onclick="setModo('cft', this)">CFT (±2%)</button>
     </div>
@@ -66,7 +86,7 @@
     <div class="grid">
         <div class="input-group">
             <label>P. Inicial (g)</label>
-            <input type="number" id="pFrascoAntes">
+            <input type="number" id="pFrascoAntes" value="7000">
         </div>
         <div class="input-group">
             <label>P. Final (g)</label>
@@ -81,14 +101,14 @@
     <div class="section-title">Solo do Furo</div>
     <div class="input-group">
         <label>Peso Solo Úmido Total (g)</label>
-        <input type="number" id="pSoloUmidoFuro" placeholder="Massa úmida do furo">
+        <input type="number" id="pSoloUmidoFuro">
     </div>
 
     <div class="section-title">Amostra para Umidade</div>
     <div class="grid">
         <div class="input-group">
             <label>P. Amostra Úmida + Tara (g)</label>
-            <input type="number" id="pAmostraUmida">
+            <input type="number" id="pAmostraUmida" value="100">
         </div>
         <div class="input-group">
             <label>P. Amostra Seca + Tara (g)</label>
@@ -100,12 +120,14 @@
         <input type="number" id="pTara" value="0">
     </div>
 
-    <button id="btnCalcular" onclick="calcular()">CALCULAR E VERIFICAR</button>
-
+    <button id="btnCalcular" class="no-print" onclick="calcular()">CALCULAR E VERIFICAR</button>
+    
     <div id="resultado">
         <div class="card-result" id="detalhes"></div>
         <div id="statusFinal" class="status"></div>
     </div>
+
+    <button id="btnDownload" class="no-print" onclick="baixarPNG()">BAIXAR ENSAIO (PNG)</button>
 </div>
 
 <script>
@@ -115,7 +137,6 @@
         modoAtual = modo;
         document.querySelectorAll('.btn-toggle').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        document.getElementById('resultado').style.display = 'none';
     }
 
     function calcular() {
@@ -131,36 +152,32 @@
         const pTara = parseFloat(document.getElementById('pTara').value);
 
         if ([dMaxLab, hOtima, densAreia, pAntes, pDepois, pFunil, pSUmidoFuro, pAUmida, pASeca].some(isNaN)) {
-            alert("Preencha todos os campos.");
+            alert("Preencha todos os campos obrigatórios.");
             return;
         }
 
-        // 1. Umidade da Amostra (%)
         const umidadeReal = ((pAUmida - pASeca) / (pASeca - pTara)) * 100;
-
-        // 2. Volume do Furo (cm³)
         const massaAreiaFuro = (pAntes - pDepois) - pFunil;
         const volumeFuro = massaAreiaFuro / densAreia;
-
-        // 3. Densidade Seca Campo (g/cm³)
         const densidadeUmidaCampo = pSUmidoFuro / volumeFuro;
         const densidadeSecaCampo = densidadeUmidaCampo / (1 + (umidadeReal / 100));
-
-        // 4. Grau de Compactação (%) - 4 casas decimais
         const gc = (densidadeSecaCampo * 100000 / dMaxLab) ;
         
-        // 5. Tolerâncias
         const desvio = umidadeReal - hOtima;
         const tolerancia = (modoAtual === 'aterro') ? 3 : 2;
 
         const divRes = document.getElementById('resultado');
         divRes.style.display = 'block';
+        document.getElementById('btnDownload').style.display = 'block';
         
         document.getElementById('detalhes').innerHTML = `
+            <strong>REGISTRO:</strong> ${document.getElementById('registro').value || '---'}<br>
+            <strong>TRECHO:</strong> Estaca ${document.getElementById('estacaIni').value || '0'} até ${document.getElementById('estacaFin').value || '0'}<br>
+            <hr style="border:0; border-top:1px solid #e2e8f0; margin:10px 0">
             <strong>Volume do Furo:</strong> ${volumeFuro.toFixed(2)} cm³<br>
             <strong>Umidade Real:</strong> ${umidadeReal.toFixed(2)}%<br>
             <strong>Densidade Seca Campo:</strong> ${densidadeSecaCampo.toFixed(3)} g/cm³<br>
-            <strong>Grau de Compactação:</strong> ${gc.toFixed(4)}%<br>
+            <strong>Grau de Compactação:</strong> ${gc.toFixed(2)}%<br>
             <strong>Desvio Umidade:</strong> ${desvio.toFixed(2)}% (Margem: ±${tolerancia}%)
         `;
 
@@ -173,11 +190,31 @@
             divStatus.innerHTML = "APROVADO ✅";
         } else {
             divStatus.className = 'status reprovou';
-            let msg = "REPROVADO ❌<br><small style='font-size:12px'>";
-            if(!aprovadoGC) msg += "- Compactação abaixo de 100%<br>";
-            if(!aprovadoUmi) msg += `- Umidade fora da margem (±${tolerancia}%)`;
+            let msg = "REPROVADO ❌<br><small style='font-size:11px'>";
+            if(!aprovadoGC) msg += "- GC abaixo de 100% ";
+            if(!aprovadoUmi) msg += `- Umidade fora da margem`;
             divStatus.innerHTML = msg + "</small>";
         }
+        
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    function baixarPNG() {
+        const area = document.getElementById('printableArea');
+        const botoes = document.querySelectorAll('.no-print');
+        
+        // Esconde botões para o print ficar limpo
+        botoes.forEach(b => b.style.visibility = 'hidden');
+
+        html2canvas(area, { scale: 2 }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `Ensaio_Estaca_${document.getElementById('estacaIni').value}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+            
+            // Mostra os botões de volta
+            botoes.forEach(b => b.style.visibility = 'visible');
+        });
     }
 </script>
 
