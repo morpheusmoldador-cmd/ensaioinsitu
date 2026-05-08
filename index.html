@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ensaio de Densidade - Field Test</title>
+    <title>Ensaio de Densidade - Pro</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -12,8 +12,8 @@
             --bg: #f1f5f9;
         }
 
-        body { font-family: sans-serif; background-color: var(--bg); margin: 0; padding: 10px; display: flex; justify-content: center; }
-        .container { background: white; width: 100%; max-width: 450px; padding: 20px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); transition: all 0.3s; }
+        body { font-family: sans-serif; background-color: var(--bg); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        .container { background: white; width: 100%; max-width: 450px; padding: 20px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: #1e293b; font-size: 1.1rem; margin-bottom: 15px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
         
         .section-title { font-size: 0.85rem; color: var(--primary); font-weight: bold; margin: 15px 0 8px 0; text-transform: uppercase; border-left: 3px solid var(--primary); padding-left: 5px; }
@@ -30,122 +30,129 @@
         #btnCalcular { width: 100%; padding: 15px; background: #0f172a; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; margin-top: 15px; cursor: pointer; }
         #btnPrepararPrint { width: 100%; padding: 12px; background: #64748b; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; margin-top: 10px; cursor: pointer; display: none; }
         
+        #btnVoltar { display: none; width: 100%; max-width: 450px; padding: 12px; background: var(--danger); color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; margin-bottom: 10px; cursor: pointer; text-transform: uppercase; }
+
         #resultado { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; }
         .card-result { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px; margin-top: 10px; font-size: 13px; line-height: 1.7; color: #334155; }
         .status { text-align: center; font-size: 18px; font-weight: bold; margin-top: 10px; padding: 10px; border-radius: 6px; }
         .passou { background: #dcfce7; color: var(--success); border: 1px solid var(--success); }
         .reprovou { background: #fee2e2; color: var(--danger); border: 1px solid var(--danger); }
 
-        /* Estilo para o Modo Print */
-        .print-mode { padding: 0; background: white; }
+        /* Estilos para o Modo Print */
+        .print-mode { background: white; padding: 0; }
         .print-mode .container { box-shadow: none; width: 100vw; max-width: none; border-radius: 0; }
-        .print-mode input { border: none !important; padding: 2px 0 !important; background: transparent !important; font-weight: bold; color: black; }
+        .print-mode input { border: none !important; padding: 2px 0 !important; background: transparent !important; font-weight: bold; color: black; -webkit-appearance: none; }
         .print-mode .no-print { display: none !important; }
-        .print-mode h2 { margin-top: 0; }
-        
-        #btnVoltar { display: none; position: fixed; bottom: 10px; right: 10px; background: #000; color: #fff; padding: 10px; border-radius: 50%; border: none; z-index: 100; opacity: 0.5; }
+        .print-mode #btnVoltar { display: block !important; }
     </style>
 </head>
 <body id="mainBody">
 
-<div class="container">
-    <h2>Ensaio de Compactação</h2>
+    <button id="btnVoltar" onclick="desativarModoPrint()">← Voltar para Edição</button>
 
-    <div class="section-title">Identificação</div>
-    <div class="input-group">
-        <label>Número de Registro</label>
-        <input type="text" id="registro" placeholder="Digite o registro...">
-    </div>
-    <div class="grid">
+    <div class="container" id="appContent">
+        <h2>Ensaio de Compactação</h2>
+
+        <div class="section-title">Identificação</div>
+        <div class="grid">
+            <div class="input-group">
+                <label>Número de Registro</label>
+                <input type="text" id="registro" placeholder="Ex: 001/24">
+            </div>
+            <div class="input-group">
+                <label>Data</label>
+                <input type="date" id="dataEnsaio">
+            </div>
+        </div>
+        
+        <div class="grid">
+            <div class="input-group">
+                <label>Estaca Inicial</label>
+                <input type="text" id="estacaIni" placeholder="0+000">
+            </div>
+            <div class="input-group">
+                <label>Estaca Final</label>
+                <input type="text" id="estacaFin" placeholder="0+020">
+            </div>
+        </div>
+
+        <div class="button-group no-print">
+            <button class="btn-toggle active" id="btnAterro" onclick="setModo('aterro')">Aterro (±3%)</button>
+            <button class="btn-toggle" id="btnCFT" onclick="setModo('cft')">CFT (±2%)</button>
+        </div>
+
+        <div class="section-title">Dados de Laboratório</div>
+        <div class="grid">
+            <div class="input-group">
+                <label>Dens. Máx. Seca (Lab)</label>
+                <input type="number" id="densMax" placeholder="g/cm³" step="0.001">
+            </div>
+            <div class="input-group">
+                <label>Umidade Ótima (%)</label>
+                <input type="number" id="umiOti" placeholder="%" step="0.1">
+            </div>
+        </div>
+
+        <div class="section-title">Frasco de Areia</div>
         <div class="input-group">
-            <label>Estaca Inicial</label>
-            <input type="text" id="estacaIni" placeholder="0+000">
+            <label>Densidade da Areia (g/cm³)</label>
+            <input type="number" id="densAreia" value="1.418" step="0.001">
+        </div>
+        <div class="grid">
+            <div class="input-group">
+                <label>P. Inicial (g)</label>
+                <input type="number" id="pFrascoAntes" value="7000">
+            </div>
+            <div class="input-group">
+                <label>P. Final (g)</label>
+                <input type="number" id="pFrascoDepois">
+            </div>
         </div>
         <div class="input-group">
-            <label>Estaca Final</label>
-            <input type="text" id="estacaFin" placeholder="0+020">
+            <label>Peso Areia Funil (g)</label>
+            <input type="number" id="pFunil" value="0">
         </div>
-    </div>
 
-    <div class="button-group no-print">
-        <button class="btn-toggle active" id="btnAterro" onclick="setModo('aterro')">Aterro (±3%)</button>
-        <button class="btn-toggle" id="btnCFT" onclick="setModo('cft')">CFT (±2%)</button>
-    </div>
-
-    <div class="section-title">Dados de Laboratório</div>
-    <div class="grid">
+        <div class="section-title">Solo e Umidade</div>
         <div class="input-group">
-            <label>Dens. Máx. Seca (Lab)</label>
-            <input type="number" id="densMax" placeholder="g/cm³" step="0.001">
+            <label>Peso Solo Úmido Total (g)</label>
+            <input type="number" id="pSoloUmidoFuro">
         </div>
-        <div class="input-group">
-            <label>Umidade Ótima (%)</label>
-            <input type="number" id="umiOti" placeholder="%" step="0.1">
-        </div>
-    </div>
-
-    <div class="section-title">Frasco de Areia</div>
-    <div class="input-group">
-        <label>Densidade da Areia (g/cm³)</label>
-        <input type="number" id="densAreia" value="1.418" step="0.001">
-    </div>
-    <div class="grid">
-        <div class="input-group">
-            <label>P. Inicial (g)</label>
-            <input type="number" id="pFrascoAntes" value="7000">
+        <div class="grid">
+            <div class="input-group">
+                <label>P. Amostra Úmida + Tara (g)</label>
+                <input type="number" id="pAmostraUmida" value="100">
+            </div>
+            <div class="input-group">
+                <label>P. Amostra Seca + Tara (g)</label>
+                <input type="number" id="pAmostraSeca">
+            </div>
         </div>
         <div class="input-group">
-            <label>P. Final (g)</label>
-            <input type="number" id="pFrascoDepois">
+            <label>Peso da Tara (g)</label>
+            <input type="number" id="pTara" value="0">
         </div>
-    </div>
-    <div class="input-group">
-        <label>Peso Areia Funil (g)</label>
-        <input type="number" id="pFunil" value="0">
-    </div>
 
-    <div class="section-title">Solo do Furo</div>
-    <div class="input-group">
-        <label>Peso Solo Úmido Total (g)</label>
-        <input type="number" id="pSoloUmidoFuro" placeholder="Massa úmida do furo">
-    </div>
+        <button id="btnCalcular" class="no-print" onclick="calcular()">CALCULAR E VERIFICAR</button>
 
-    <div class="section-title">Amostra para Umidade</div>
-    <div class="grid">
-        <div class="input-group">
-            <label>P. Amostra Úmida + Tara (g)</label>
-            <input type="number" id="pAmostraUmida" value="100">
+        <div id="resultado">
+            <div class="card-result" id="detalhes"></div>
+            <div id="statusFinal" class="status"></div>
         </div>
-        <div class="input-group">
-            <label>P. Amostra Seca + Tara (g)</label>
-            <input type="number" id="pAmostraSeca">
-        </div>
+
+        <button id="btnPrepararPrint" class="no-print" onclick="ativarModoPrint()">PREPARAR PARA PRINT (ENQUADRAR)</button>
     </div>
-    <div class="input-group">
-        <label>Peso da Tara (g)</label>
-        <input type="number" id="pTara" value="0">
-    </div>
-
-    <button id="btnCalcular" class="no-print" onclick="calcular()">CALCULAR E VERIFICAR</button>
-
-    <div id="resultado">
-        <div class="card-result" id="detalhes"></div>
-        <div id="statusFinal" class="status"></div>
-    </div>
-
-    <button id="btnPrepararPrint" class="no-print" onclick="ativarModoPrint()">PREPARAR PARA PRINT (ENQUADRAR)</button>
-</div>
-
-<button id="btnVoltar" onclick="desativarModoPrint()">↺</button>
 
 <script>
     let modoAtual = 'aterro';
+
+    // Configura a data de hoje por padrão
+    document.getElementById('dataEnsaio').valueAsDate = new Date();
 
     function setModo(modo) {
         modoAtual = modo;
         document.getElementById('btnAterro').classList.toggle('active', modo === 'aterro');
         document.getElementById('btnCFT').classList.toggle('active', modo === 'cft');
-        document.getElementById('resultado').style.display = 'none';
     }
 
     function calcular() {
@@ -165,30 +172,26 @@
             return;
         }
 
-        // 1. Umidade da Amostra (%)
         const umidadeReal = ((pAUmida - pASeca) / (pASeca - pTara)) * 100;
-
-        // 2. Volume do Furo (cm³)
         const massaAreiaFuro = (pAntes - pDepois) - pFunil;
         const volumeFuro = massaAreiaFuro / densAreia;
-
-        // 3. Densidade Seca Campo (g/cm³)
         const densidadeUmidaCampo = pSUmidoFuro / volumeFuro;
         const densidadeSecaCampo = densidadeUmidaCampo / (1 + (umidadeReal / 100));
-
-        // 4. Grau de Compactação (%) - 4 casas decimais como solicitado originalmente
         const gc = (densidadeSecaCampo * 100000 / dMaxLab) ;
-        
-        // 5. Tolerâncias
         const desvio = umidadeReal - hOtima;
         const tolerancia = (modoAtual === 'aterro') ? 3 : 2;
 
         document.getElementById('resultado').style.display = 'block';
         document.getElementById('btnPrepararPrint').style.display = 'block';
         
+        // Formatação da data para o relatório
+        const dataInput = document.getElementById('dataEnsaio').value;
+        const dataFormatada = dataInput ? dataInput.split('-').reverse().join('/') : '---';
+
         document.getElementById('detalhes').innerHTML = `
-            <strong>Registro:</strong> ${document.getElementById('registro').value || 'N/A'}<br>
-            <strong>Estacas:</strong> ${document.getElementById('estacaIni').value || '0'} a ${document.getElementById('estacaFin').value || '0'}<br>
+            <strong>REGISTRO:</strong> ${document.getElementById('registro').value || '---'} | <strong>DATA:</strong> ${dataFormatada}<br>
+            <strong>ESTACAS:</strong> ${document.getElementById('estacaIni').value || '0'} a ${document.getElementById('estacaFin').value || '0'}<br>
+            <hr style="border:0; border-top:1px solid #e2e8f0; margin:8px 0">
             <strong>Volume do Furo:</strong> ${volumeFuro.toFixed(2)} cm³<br>
             <strong>Umidade Real:</strong> ${umidadeReal.toFixed(2)}%<br>
             <strong>Densidade Seca Campo:</strong> ${densidadeSecaCampo.toFixed(3)} g/cm³<br>
@@ -198,29 +201,25 @@
 
         const aprovadoGC = gc >= 100;
         const aprovadoUmi = Math.abs(desvio) <= tolerancia;
-
         const divStatus = document.getElementById('statusFinal');
+
         if (aprovadoGC && aprovadoUmi) {
             divStatus.className = 'status passou';
             divStatus.innerHTML = "APROVADO ✅";
         } else {
             divStatus.className = 'status reprovou';
-            let msg = "REPROVADO ❌<br><small style='font-size:12px'>";
-            if(!aprovadoGC) msg += "- GC abaixo de 100%<br>";
-            if(!aprovadoUmi) msg += `- Umidade fora da margem (±${tolerancia}%)`;
-            divStatus.innerHTML = msg + "</small>";
+            divStatus.innerHTML = `REPROVADO ❌<br><small style="font-size:11px">${!aprovadoGC ? '- GC < 100% ' : ''}${!aprovadoUmi ? '- Umidade fora da margem' : ''}</small>`;
         }
+        window.scrollTo(0, document.body.scrollHeight);
     }
 
     function ativarModoPrint() {
         document.getElementById('mainBody').classList.add('print-mode');
-        document.getElementById('btnVoltar').style.display = 'block';
-        window.scrollTo(0,0);
+        window.scrollTo(0, 0);
     }
 
     function desativarModoPrint() {
         document.getElementById('mainBody').classList.remove('print-mode');
-        document.getElementById('btnVoltar').style.display = 'none';
     }
 </script>
 
