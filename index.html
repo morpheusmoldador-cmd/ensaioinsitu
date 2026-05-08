@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ensaio In Situ - Pro</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <title>Ensaio de Densidade - Field Test</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -14,7 +13,7 @@
         }
 
         body { font-family: sans-serif; background-color: var(--bg); margin: 0; padding: 10px; display: flex; justify-content: center; }
-        .container { background: white; width: 100%; max-width: 450px; padding: 20px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .container { background: white; width: 100%; max-width: 450px; padding: 20px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); transition: all 0.3s; }
         h2 { text-align: center; color: #1e293b; font-size: 1.1rem; margin-bottom: 15px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
         
         .section-title { font-size: 0.85rem; color: var(--primary); font-weight: bold; margin: 15px 0 8px 0; text-transform: uppercase; border-left: 3px solid var(--primary); padding-left: 5px; }
@@ -29,26 +28,33 @@
         input { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 14px; background: #fdfdfd; }
         
         #btnCalcular { width: 100%; padding: 15px; background: #0f172a; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; margin-top: 15px; cursor: pointer; }
-        #btnDownload { width: 100%; padding: 10px; background: #64748b; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; margin-top: 10px; cursor: pointer; display: none; }
+        #btnPrepararPrint { width: 100%; padding: 12px; background: #64748b; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; margin-top: 10px; cursor: pointer; display: none; }
         
         #resultado { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; }
         .card-result { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px; margin-top: 10px; font-size: 13px; line-height: 1.7; color: #334155; }
         .status { text-align: center; font-size: 18px; font-weight: bold; margin-top: 10px; padding: 10px; border-radius: 6px; }
         .passou { background: #dcfce7; color: var(--success); border: 1px solid var(--success); }
         .reprovou { background: #fee2e2; color: var(--danger); border: 1px solid var(--danger); }
+
+        /* Estilo para o Modo Print */
+        .print-mode { padding: 0; background: white; }
+        .print-mode .container { box-shadow: none; width: 100vw; max-width: none; border-radius: 0; }
+        .print-mode input { border: none !important; padding: 2px 0 !important; background: transparent !important; font-weight: bold; color: black; }
+        .print-mode .no-print { display: none !important; }
+        .print-mode h2 { margin-top: 0; }
         
-        .no-print { margin-bottom: 10px; }
+        #btnVoltar { display: none; position: fixed; bottom: 10px; right: 10px; background: #000; color: #fff; padding: 10px; border-radius: 50%; border: none; z-index: 100; opacity: 0.5; }
     </style>
 </head>
-<body>
+<body id="mainBody">
 
-<div class="container" id="printableArea">
+<div class="container">
     <h2>Ensaio de Compactação</h2>
 
     <div class="section-title">Identificação</div>
     <div class="input-group">
         <label>Número de Registro</label>
-        <input type="text" id="registro" placeholder="Ex: REG-2024-001">
+        <input type="text" id="registro" placeholder="Digite o registro...">
     </div>
     <div class="grid">
         <div class="input-group">
@@ -62,8 +68,8 @@
     </div>
 
     <div class="button-group no-print">
-        <button class="btn-toggle active" onclick="setModo('aterro', this)">Aterro (±3%)</button>
-        <button class="btn-toggle" onclick="setModo('cft', this)">CFT (±2%)</button>
+        <button class="btn-toggle active" id="btnAterro" onclick="setModo('aterro')">Aterro (±3%)</button>
+        <button class="btn-toggle" id="btnCFT" onclick="setModo('cft')">CFT (±2%)</button>
     </div>
 
     <div class="section-title">Dados de Laboratório</div>
@@ -95,13 +101,13 @@
     </div>
     <div class="input-group">
         <label>Peso Areia Funil (g)</label>
-        <input type="number" id="pFunil">
+        <input type="number" id="pFunil" value="0">
     </div>
 
     <div class="section-title">Solo do Furo</div>
     <div class="input-group">
         <label>Peso Solo Úmido Total (g)</label>
-        <input type="number" id="pSoloUmidoFuro">
+        <input type="number" id="pSoloUmidoFuro" placeholder="Massa úmida do furo">
     </div>
 
     <div class="section-title">Amostra para Umidade</div>
@@ -121,22 +127,25 @@
     </div>
 
     <button id="btnCalcular" class="no-print" onclick="calcular()">CALCULAR E VERIFICAR</button>
-    
+
     <div id="resultado">
         <div class="card-result" id="detalhes"></div>
         <div id="statusFinal" class="status"></div>
     </div>
 
-    <button id="btnDownload" class="no-print" onclick="baixarPNG()">BAIXAR ENSAIO (PNG)</button>
+    <button id="btnPrepararPrint" class="no-print" onclick="ativarModoPrint()">PREPARAR PARA PRINT (ENQUADRAR)</button>
 </div>
+
+<button id="btnVoltar" onclick="desativarModoPrint()">↺</button>
 
 <script>
     let modoAtual = 'aterro';
 
-    function setModo(modo, btn) {
+    function setModo(modo) {
         modoAtual = modo;
-        document.querySelectorAll('.btn-toggle').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+        document.getElementById('btnAterro').classList.toggle('active', modo === 'aterro');
+        document.getElementById('btnCFT').classList.toggle('active', modo === 'cft');
+        document.getElementById('resultado').style.display = 'none';
     }
 
     function calcular() {
@@ -151,33 +160,39 @@
         const pASeca = parseFloat(document.getElementById('pAmostraSeca').value);
         const pTara = parseFloat(document.getElementById('pTara').value);
 
-        if ([dMaxLab, hOtima, densAreia, pAntes, pDepois, pFunil, pSUmidoFuro, pAUmida, pASeca].some(isNaN)) {
-            alert("Preencha todos os campos obrigatórios.");
+        if ([dMaxLab, hOtima, densAreia, pAntes, pDepois, pSUmidoFuro, pAUmida, pASeca].some(isNaN)) {
+            alert("Preencha todos os campos corretamente.");
             return;
         }
 
+        // 1. Umidade da Amostra (%)
         const umidadeReal = ((pAUmida - pASeca) / (pASeca - pTara)) * 100;
+
+        // 2. Volume do Furo (cm³)
         const massaAreiaFuro = (pAntes - pDepois) - pFunil;
         const volumeFuro = massaAreiaFuro / densAreia;
+
+        // 3. Densidade Seca Campo (g/cm³)
         const densidadeUmidaCampo = pSUmidoFuro / volumeFuro;
         const densidadeSecaCampo = densidadeUmidaCampo / (1 + (umidadeReal / 100));
+
+        // 4. Grau de Compactação (%) - 4 casas decimais como solicitado originalmente
         const gc = (densidadeSecaCampo * 100000 / dMaxLab) ;
         
+        // 5. Tolerâncias
         const desvio = umidadeReal - hOtima;
         const tolerancia = (modoAtual === 'aterro') ? 3 : 2;
 
-        const divRes = document.getElementById('resultado');
-        divRes.style.display = 'block';
-        document.getElementById('btnDownload').style.display = 'block';
+        document.getElementById('resultado').style.display = 'block';
+        document.getElementById('btnPrepararPrint').style.display = 'block';
         
         document.getElementById('detalhes').innerHTML = `
-            <strong>REGISTRO:</strong> ${document.getElementById('registro').value || '---'}<br>
-            <strong>TRECHO:</strong> Estaca ${document.getElementById('estacaIni').value || '0'} até ${document.getElementById('estacaFin').value || '0'}<br>
-            <hr style="border:0; border-top:1px solid #e2e8f0; margin:10px 0">
+            <strong>Registro:</strong> ${document.getElementById('registro').value || 'N/A'}<br>
+            <strong>Estacas:</strong> ${document.getElementById('estacaIni').value || '0'} a ${document.getElementById('estacaFin').value || '0'}<br>
             <strong>Volume do Furo:</strong> ${volumeFuro.toFixed(2)} cm³<br>
             <strong>Umidade Real:</strong> ${umidadeReal.toFixed(2)}%<br>
             <strong>Densidade Seca Campo:</strong> ${densidadeSecaCampo.toFixed(3)} g/cm³<br>
-            <strong>Grau de Compactação:</strong> ${gc.toFixed(2)}%<br>
+            <strong>Grau de Compactação:</strong> ${gc.toFixed(4)}%<br>
             <strong>Desvio Umidade:</strong> ${desvio.toFixed(2)}% (Margem: ±${tolerancia}%)
         `;
 
@@ -190,31 +205,22 @@
             divStatus.innerHTML = "APROVADO ✅";
         } else {
             divStatus.className = 'status reprovou';
-            let msg = "REPROVADO ❌<br><small style='font-size:11px'>";
-            if(!aprovadoGC) msg += "- GC abaixo de 100% ";
-            if(!aprovadoUmi) msg += `- Umidade fora da margem`;
+            let msg = "REPROVADO ❌<br><small style='font-size:12px'>";
+            if(!aprovadoGC) msg += "- GC abaixo de 100%<br>";
+            if(!aprovadoUmi) msg += `- Umidade fora da margem (±${tolerancia}%)`;
             divStatus.innerHTML = msg + "</small>";
         }
-        
-        window.scrollTo(0, document.body.scrollHeight);
     }
 
-    function baixarPNG() {
-        const area = document.getElementById('printableArea');
-        const botoes = document.querySelectorAll('.no-print');
-        
-        // Esconde botões para o print ficar limpo
-        botoes.forEach(b => b.style.visibility = 'hidden');
+    function ativarModoPrint() {
+        document.getElementById('mainBody').classList.add('print-mode');
+        document.getElementById('btnVoltar').style.display = 'block';
+        window.scrollTo(0,0);
+    }
 
-        html2canvas(area, { scale: 2 }).then(canvas => {
-            const link = document.createElement('a');
-            link.download = `Ensaio_Estaca_${document.getElementById('estacaIni').value}.png`;
-            link.href = canvas.toDataURL();
-            link.click();
-            
-            // Mostra os botões de volta
-            botoes.forEach(b => b.style.visibility = 'visible');
-        });
+    function desativarModoPrint() {
+        document.getElementById('mainBody').classList.remove('print-mode');
+        document.getElementById('btnVoltar').style.display = 'none';
     }
 </script>
 
