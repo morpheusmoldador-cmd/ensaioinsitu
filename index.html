@@ -56,14 +56,14 @@
         .passou { background: #dcfce7; color: var(--success); border: 1px solid var(--success); }
         .reprovou { background: #fee2e2; color: var(--danger); border: 1px solid var(--danger); }
 
-        .td-status { text-align: center; font-size: 16px; }
+        .td-status { text-align: center; font-size: 14px; }
 
         /* Tabelas */
         .table-responsive { width: 100%; overflow-x: auto; margin-top: 15px; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; }
         th, td { padding: 6px; border: 1px solid #e2e8f0; }
         th { background: #f1f5f9; font-weight: bold; }
-        tfoot { background: #f8fafc; font-weight: bold; }
+        tfoot { background: #f8fafc; font-weight: bold; border-top: 2px solid var(--dark); }
         .chart-container { width: 100%; margin-top: 15px; }
 
         /* Print/Relatório */
@@ -196,18 +196,18 @@
 
         <div id="moduloCal" class="modulo">
             <button class="btn-voltar-menu no-print" onclick="navegarPara('moduloMenu')">← Voltar ao Menu</button>
-            <h2>Controle de Taxa de Cal</h2>
+            <h2>Controle de Taxa de Cal (Limite &ge; 4%)</h2>
             <div id="relatorioCal">
                 <div class="section-title">Inserir Medição</div>
                 <div class="grid-3">
                     <div class="input-group"><label>Data</label><input type="text" id="calData" placeholder="Ex: 24/06/26"></div>
-                    <div class="input-group"><label>Estaca Coleta</label><input type="text" id="calEstCol" placeholder="Ex: 21265"></div>
+                    <div class="input-group"><label>Estaca Coleta</label><input type="text" id="calEstCol"></div>
                     <div class="input-group"><label>Faixa</label><input type="text" id="calFaixa" placeholder="LE / EX / LD"></div>
                 </div>
                 <div class="grid-3">
                     <div class="input-group"><label>Área da Lona (m²)</label><input type="number" id="calArea" value="0.250" step="0.001"></div>
                     <div class="input-group"><label>Tara Lona (g)</label><input type="number" id="calTara" value="2100"></div>
-                    <div class="input-group"><label>Massa Bruta (g)</label><input type="number" id="calMassaBruta" placeholder="Ex: 5570"></div>
+                    <div class="input-group"><label>Massa Bruta (g)</label><input type="number" id="calMassaBruta"></div>
                 </div>
                 <button class="btn-acao btn-calc no-print" onclick="addTaxaRow('Cal')">ADICIONAR LANÇAMENTO</button>
 
@@ -215,15 +215,15 @@
                     <table id="tblCal">
                         <thead>
                             <tr>
-                                <th>Data</th><th>Estaca Coleta</th><th>Faixa</th><th>Tara (g)</th><th>Área (m²)</th><th>Peso Bruto (g)</th><th>Peso Líq (g)</th><th>Taxa OBTIDA (kg/m²)</th><th class="no-print">Ação</th>
+                                <th>Data</th><th>Estaca Coleta</th><th>Faixa</th><th>Tara (g)</th><th>Área (m²)</th><th>Peso Bruto (g)</th><th>Peso Líq (g)</th><th>Taxa (%)</th><th>Status</th><th class="no-print">Ação</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
                         <tfoot>
                             <tr>
                                 <td colspan="7" style="text-align: right;">MÉDIA MEDIDA:</td>
-                                <td id="mediaCal" style="color: var(--primary);">0.00 kg/m²</td>
-                                <td class="no-print"></td>
+                                <td id="mediaCal" style="color: var(--primary); font-weight: bold;">0.00%</td>
+                                <td colspan="2"></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -237,15 +237,24 @@
             <h2>Controle de Taxa de Cimento</h2>
             <div id="relatorioCimento">
                 <div class="section-title">Inserir Medição</div>
-                <div class="grid-3">
+                <div class="grid">
+                    <div class="input-group">
+                        <label>Local de Aplicação</label>
+                        <select id="cimLocal">
+                            <option value="principal">Pista Principal (Limite &ge; 5%)</option>
+                            <option value="acostamento">Acostamento (Limite &ge; 3%)</option>
+                        </select>
+                    </div>
                     <div class="input-group"><label>Data</label><input type="text" id="cimData" placeholder="Ex: 01/07/26"></div>
-                    <div class="input-group"><label>Estaca Coleta</label><input type="text" id="cimEstCol" placeholder="Ex: 21270"></div>
-                    <div class="input-group"><label>Faixa</label><input type="text" id="cimFaixa" placeholder="LE / EX / LD"></div>
                 </div>
                 <div class="grid-3">
+                    <div class="input-group"><label>Estaca Coleta</label><input type="text" id="cimEstCol"></div>
+                    <div class="input-group"><label>Faixa</label><input type="text" id="cimFaixa" placeholder="LE / EX / LD"></div>
                     <div class="input-group"><label>Área da Lona (m²)</label><input type="number" id="cimArea" value="0.250" step="0.001"></div>
+                </div>
+                <div class="grid">
                     <div class="input-group"><label>Tara Lona (g)</label><input type="number" id="cimTara" value="1165"></div>
-                    <div class="input-group"><label>Massa Bruta (g)</label><input type="number" id="cimMassaBruta" placeholder="Ex: 5792"></div>
+                    <div class="input-group"><label>Massa Bruta (g)</label><input type="number" id="cimMassaBruta"></div>
                 </div>
                 <button class="btn-acao btn-calc no-print" onclick="addTaxaRow('Cimento')">ADICIONAR LANÇAMENTO</button>
 
@@ -253,15 +262,15 @@
                     <table id="tblCimento">
                         <thead>
                             <tr>
-                                <th>Data</th><th>Estaca Coleta</th><th>Faixa</th><th>Tara (g)</th><th>Área (m²)</th><th>Peso Bruto (g)</th><th>Peso Líq (g)</th><th>Taxa OBTIDA (kg/m²)</th><th class="no-print">Ação</th>
+                                <th>Data</th><th>Local</th><th>Estaca Coleta</th><th>Faixa</th><th>Tara (g)</th><th>Área (m²)</th><th>Peso Bruto (g)</th><th>Peso Líq (g)</th><th>Taxa (%)</th><th>Status</th><th class="no-print">Ação</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="7" style="text-align: right;">MÉDIA MEDIDA:</td>
-                                <td id="mediaCimento" style="color: var(--primary);">0.00 kg/m²</td>
-                                <td class="no-print"></td>
+                                <td colspan="8" style="text-align: right;">MÉDIA MEDIDA:</td>
+                                <td id="mediaCimento" style="color: var(--primary); font-weight: bold;">0.00%</td>
+                                <td colspan="2"></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -272,18 +281,18 @@
 
         <div id="moduloPintura" class="modulo">
             <button class="btn-voltar-menu no-print" onclick="navegarPara('moduloMenu')">← Voltar ao Menu</button>
-            <h2>Controle de Taxa de Imprimação</h2>
+            <h2>Controle de Taxa de Imprimação (Limite: 1.0% a 1.2%)</h2>
             <div id="relatorioPintura">
                 <div class="section-title">Inserir Medição</div>
                 <div class="grid-3">
                     <div class="input-group"><label>Data</label><input type="text" id="pinData" placeholder="Ex: 02/07/26"></div>
-                    <div class="input-group"><label>Estaca Coleta</label><input type="text" id="pinEstCol" placeholder="Ex: 21256"></div>
+                    <div class="input-group"><label>Estaca Coleta</label><input type="text" id="pinEstCol"></div>
                     <div class="input-group"><label>Faixa</label><input type="text" id="pinFaixa" placeholder="LE / EX / LD"></div>
                 </div>
                 <div class="grid-3">
                     <div class="input-group"><label>Área da Chapa (m²)</label><input type="number" id="pinArea" value="0.0656" step="0.0001"></div>
                     <div class="input-group"><label>Tara Chapa (g)</label><input type="number" id="pinTara" value="530"></div>
-                    <div class="input-group"><label>Massa Bruta (g)</label><input type="number" id="pinMassaBruta" placeholder="Ex: 604"></div>
+                    <div class="input-group"><label>Massa Bruta (g)</label><input type="number" id="pinMassaBruta"></div>
                 </div>
                 <button class="btn-acao btn-calc no-print" onclick="addTaxaRow('Pintura')">ADICIONAR LANÇAMENTO</button>
 
@@ -291,15 +300,15 @@
                     <table id="tblPintura">
                         <thead>
                             <tr>
-                                <th>Data</th><th>Estaca Coleta</th><th>Faixa</th><th>Tara (g)</th><th>Área (m²)</th><th>Peso Bruto (g)</th><th>Peso Líq (g)</th><th>Taxa OBTIDA (kg/m²)</th><th class="no-print">Ação</th>
+                                <th>Data</th><th>Estaca Coleta</th><th>Faixa</th><th>Tara (g)</th><th>Área (m²)</th><th>Peso Bruto (g)</th><th>Peso Líq (g)</th><th>Taxa (%)</th><th>Status</th><th class="no-print">Ação</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
                         <tfoot>
                             <tr>
                                 <td colspan="7" style="text-align: right;">MÉDIA MEDIDA:</td>
-                                <td id="mediaPintura" style="color: var(--primary);">0.00 kg/m²</td>
-                                <td class="no-print"></td>
+                                <td id="mediaPintura" style="color: var(--primary); font-weight: bold;">0.00%</td>
+                                <td colspan="2"></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -435,7 +444,7 @@
     }
 
     // ==========================================
-    // LÓGICA COLETAS DE TAXAS (CAL, CIMENTO, IMPRIMAÇÃO)
+    // LÓGICA COLETAS DE TAXAS COM LIMITES ATUALIZADOS
     // ==========================================
     function addTaxaRow(tipo) {
         const prefix = tipo.toLowerCase();
@@ -446,17 +455,39 @@
         const tara = parseFloat(document.getElementById(`${prefix}Tara`).value);
         const bruta = parseFloat(document.getElementById(`${prefix}MassaBruta`).value);
 
-        if(!data || isNaN(bruta) || isNaN(area) || isNaN(tara)) { alert("Preencha todos os campos do lançamento."); return; }
+        if(!data || isNaN(bruta) || isNaN(area) || isNaN(tara)) { alert("Preencha todos os campos corretamente."); return; }
 
         const pesoLiquidoG = bruta - tara;
-        const taxaCalculadaKgM2 = (pesoLiquidoG / area) / 1000; 
+        
+        // FÓRMULA DE TAXA EM PORCENTAGEM (%) BASEADA NAS CHAPAS/LONAS DE CAMPO
+        const taxaCalculadaPorcentagem = (pesoLiquidoG / area) / 1000 * 100; 
 
-        dadosTaxas[tipo].push({ data, estCol, faixa, tara, area, bruta, liq: pesoLiquidoG, valorTaxa: taxaCalculadaKgM2 });
+        let statusPonto = "❌";
+        let localInfo = "";
+
+        if(tipo === 'Cal') {
+            if(taxaCalculadaPorcentagem >= 4.0) statusPonto = "✅";
+        } 
+        else if(tipo === 'Cimento') {
+            const local = document.getElementById('cimLocal').value;
+            localInfo = local === 'principal' ? "Pista Principal" : "Acostamento";
+            const limite = local === 'principal' ? 5.0 : 3.0;
+            if(taxaCalculadaPorcentagem >= limite) statusPonto = "✅";
+        } 
+        else if(tipo === 'Pintura') {
+            // Limite da Imprimação entre 1% e 1.2%
+            if(taxaCalculadaPorcentagem >= 1.0 && taxaCalculadaPorcentagem <= 1.2) statusPonto = "✅";
+        }
+
+        dadosTaxas[tipo].push({ 
+            data, localInfo, estCol, faixa, tara, area, bruta, 
+            liq: pesoLiquidoG, valorTaxa: taxaCalculadaPorcentagem, status: statusPonto 
+        });
         
         renderTabelaTaxas(tipo);
         calcularMediaTaxa(tipo);
 
-        // Limpa campos dinâmicos rápidos
+        // Limpeza ágil de inputs repetitivos
         document.getElementById(`${prefix}EstCol`).value = '';
         document.getElementById(`${prefix}MassaBruta`).value = '';
     }
@@ -465,11 +496,13 @@
         const tbody = document.querySelector(`#tbl${tipo} tbody`);
         tbody.innerHTML = '';
         dadosTaxas[tipo].forEach((item, index) => {
+            let colLocal = tipo === 'Cimento' ? `<td>${item.localInfo}</td>` : '';
             tbody.innerHTML += `
                 <tr>
-                    <td>${item.data}</td><td>${item.estCol}</td><td>${item.faixa}</td>
+                    <td>${item.data}</td>${colLocal}<td>${item.estCol}</td><td>${item.faixa}</td>
                     <td>${item.tara}</td><td>${item.area}</td><td>${item.bruta}</td><td>${item.liq.toFixed(0)}</td>
-                    <td style="font-weight:bold; color:var(--success);">${item.valorTaxa.toFixed(3)} kg/m²</td>
+                    <td style="font-weight:bold; color:var(--primary);">${item.valorTaxa.toFixed(2)}%</td>
+                    <td class="td-status">${item.status}</td>
                     <td class="no-print"><button class="btn-del" onclick="excluirTaxa('${tipo}', ${index})">🗑️</button></td>
                 </tr>`;
         });
@@ -479,11 +512,11 @@
         const lista = dadosTaxas[tipo];
         const elemMedia = document.getElementById(`media${tipo}`);
         if(lista.length === 0) {
-            elemMedia.innerHTML = "0.000 kg/m²"; return;
+            elemMedia.innerHTML = "0.00%"; return;
         }
         const soma = lista.reduce((acc, curr) => acc + curr.valorTaxa, 0);
         const media = soma / lista.length;
-        elemMedia.innerHTML = `${media.toFixed(3)} kg/m²`;
+        elemMedia.innerHTML = `${media.toFixed(2)}%`;
     }
 
     function excluirTaxa(tipo, i) { 
