@@ -200,7 +200,7 @@
             <div id="relatorioCal">
                 <div class="section-title">Inserir Medição</div>
                 <div class="grid-3">
-                    <div class="input-group"><label>Data</label><input type="text" id="calData" placeholder="Ex: 24/06/26"></div>
+                    <div class="input-group"><label>Data</label><input type="date" id="calData"></div>
                     <div class="input-group"><label>Estaca Coleta</label><input type="text" id="calEstCol"></div>
                     <div class="input-group"><label>Faixa</label><input type="text" id="calFaixa" placeholder="LE / EX / LD"></div>
                 </div>
@@ -237,7 +237,7 @@
             <h2>Controle de Taxa de Cimento</h2>
             <div id="relatorioCimento">
                 <div class="section-title">Inserir Medição</div>
-                <div class="grid">
+                <div class="grid-3">
                     <div class="input-group">
                         <label>Local de Aplicação</label>
                         <select id="cimLocal">
@@ -245,17 +245,15 @@
                             <option value="acostamento">Acostamento (Limite &ge; 3%)</option>
                         </select>
                     </div>
-                    <div class="input-group"><label>Data</label><input type="text" id="cimData" placeholder="Ex: 01/07/26"></div>
+                    <div class="input-group"><label>Data</label><input type="date" id="cimData"></div>
+                    <div class="input-group"><label>Estaca Coleta</label><input type="text" id="cimEstCol"></div>
                 </div>
                 <div class="grid-3">
-                    <div class="input-group"><label>Estaca Coleta</label><input type="text" id="cimEstCol"></div>
                     <div class="input-group"><label>Faixa</label><input type="text" id="cimFaixa" placeholder="LE / EX / LD"></div>
                     <div class="input-group"><label>Área da Lona (m²)</label><input type="number" id="cimArea" value="0.250" step="0.001"></div>
-                </div>
-                <div class="grid">
                     <div class="input-group"><label>Tara Lona (g)</label><input type="number" id="cimTara" value="1165"></div>
-                    <div class="input-group"><label>Massa Bruta (g)</label><input type="number" id="cimMassaBruta"></div>
                 </div>
+                <div class="input-group"><label>Massa Bruta (g)</label><input type="number" id="cimMassaBruta"></div>
                 <button class="btn-acao btn-calc no-print" onclick="addTaxaRow('Cimento')">ADICIONAR LANÇAMENTO</button>
 
                 <div class="table-responsive">
@@ -285,7 +283,7 @@
             <div id="relatorioPintura">
                 <div class="section-title">Inserir Medição</div>
                 <div class="grid-3">
-                    <div class="input-group"><label>Data</label><input type="text" id="pinData" placeholder="Ex: 02/07/26"></div>
+                    <div class="input-group"><label>Data</label><input type="date" id="pinData"></div>
                     <div class="input-group"><label>Estaca Coleta</label><input type="text" id="pinEstCol"></div>
                     <div class="input-group"><label>Faixa</label><input type="text" id="pinFaixa" placeholder="LE / EX / LD"></div>
                 </div>
@@ -329,7 +327,12 @@
         if(idModulo === 'moduloBenkelman') atualizarGraficos();
     }
 
-    document.getElementById('dataEnsaio').valueAsDate = new Date();
+    // APLICA A DATA ATUAL AUTOMÁTICA EM TODOS OS MÓDULOS AO INICIAR
+    const hoje = new Date();
+    document.getElementById('dataEnsaio').valueAsDate = hoje;
+    document.getElementById('calData').valueAsDate = hoje;
+    document.getElementById('cimData').valueAsDate = hoje;
+    document.getElementById('pinData').valueAsDate = hoje;
 
     function activarModoPrint() { document.getElementById('mainBody').classList.add('print-mode'); window.scrollTo(0, 0); }
     function desativarModoPrint() { document.getElementById('mainBody').classList.remove('print-mode'); }
@@ -444,22 +447,28 @@
     }
 
     // ==========================================
-    // LÓGICA COLETAS DE TAXAS COM LIMITES ATUALIZADOS
+    // LÓGICA COLETAS DE TAXAS (COM DATA ATUAL)
     // ==========================================
     function addTaxaRow(tipo) {
         const prefix = tipo.toLowerCase();
-        const data = document.getElementById(`${prefix}Data`).value;
+        
+        // CONVERTE A DATA SELECIONADA PARA FORMATO LOCAL PT-BR (DD/MM/AAAA)
+        const dataInput = document.getElementById(`${prefix}Data`).value;
+        let dataFormatada = "---";
+        if (dataInput) {
+            const partes = dataInput.split("-");
+            dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+
         const estCol = document.getElementById(`${prefix}EstCol`).value;
         const faixa = document.getElementById(`${prefix}Faixa`).value;
         const area = parseFloat(document.getElementById(`${prefix}Area`).value);
         const tara = parseFloat(document.getElementById(`${prefix}Tara`).value);
         const bruta = parseFloat(document.getElementById(`${prefix}MassaBruta`).value);
 
-        if(!data || isNaN(bruta) || isNaN(area) || isNaN(tara)) { alert("Preencha todos os campos corretamente."); return; }
+        if(isNaN(bruta) || isNaN(area) || isNaN(tara)) { alert("Preencha todos os campos numericos corretamente."); return; }
 
         const pesoLiquidoG = bruta - tara;
-        
-        // FÓRMULA DE TAXA EM PORCENTAGEM (%) BASEADA NAS CHAPAS/LONAS DE CAMPO
         const taxaCalculadaPorcentagem = (pesoLiquidoG / area) / 1000 * 100; 
 
         let statusPonto = "❌";
@@ -475,19 +484,17 @@
             if(taxaCalculadaPorcentagem >= limite) statusPonto = "✅";
         } 
         else if(tipo === 'Pintura') {
-            // Limite da Imprimação entre 1% e 1.2%
             if(taxaCalculadaPorcentagem >= 1.0 && taxaCalculadaPorcentagem <= 1.2) statusPonto = "✅";
         }
 
         dadosTaxas[tipo].push({ 
-            data, localInfo, estCol, faixa, tara, area, bruta, 
+            data: dataFormatada, localInfo, estCol, faixa, tara, area, bruta, 
             liq: pesoLiquidoG, valorTaxa: taxaCalculadaPorcentagem, status: statusPonto 
         });
         
         renderTabelaTaxas(tipo);
         calcularMediaTaxa(tipo);
 
-        // Limpeza ágil de inputs repetitivos
         document.getElementById(`${prefix}EstCol`).value = '';
         document.getElementById(`${prefix}MassaBruta`).value = '';
     }
@@ -499,7 +506,7 @@
             let colLocal = tipo === 'Cimento' ? `<td>${item.localInfo}</td>` : '';
             tbody.innerHTML += `
                 <tr>
-                    <td>${item.data}</td>${colLocal}<td>${item.estCol}</td><td>${item.faixa}</td>
+                    <td>${item.data}</td>${colLocal}<td>${item.estCol || '---'}</td><td>${item.faixa || '---'}</td>
                     <td>${item.tara}</td><td>${item.area}</td><td>${item.bruta}</td><td>${item.liq.toFixed(0)}</td>
                     <td style="font-weight:bold; color:var(--primary);">${item.valorTaxa.toFixed(2)}%</td>
                     <td class="td-status">${item.status}</td>
