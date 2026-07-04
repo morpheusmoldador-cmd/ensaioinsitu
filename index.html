@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Controle de Engenharia Rodoviária</title>
+    <title>Painel de Controle de Qualidade</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -33,7 +33,6 @@
         
         .section-title { font-size: 0.85rem; color: var(--primary); font-weight: bold; margin: 15px 0 8px 0; text-transform: uppercase; border-left: 3px solid var(--primary); padding-left: 5px; }
         
-        /* Ajustado para comportar as 4 opções de camadas */
         .button-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
         .btn-toggle { padding: 10px; border: none; border-radius: 6px; background: #cbd5e1; cursor: pointer; font-weight: bold; font-size: 13px; text-align: center; }
         .btn-toggle.active { background: var(--primary); color: white; }
@@ -83,7 +82,7 @@
     <div class="container" id="appContent">
         
         <div id="moduloMenu" class="modulo active">
-            <h2>Painel Rodoviário Pro</h2>
+            <h2>Painel Controle de Qualidade</h2>
             <div class="menu-grid">
                 <button class="btn-menu" onclick="navegarPara('moduloInSitu')">Ensaio In Situ<br><small>(Densidade)</small></button>
                 <button class="btn-menu" onclick="navegarPara('moduloBenkelman')">Viga Benkelman</button>
@@ -330,7 +329,6 @@
         if(idModulo === 'moduloBenkelman') atualizarGraficos();
     }
 
-    // APLICA A DATA ATUAL AUTOMÁTICA EM TODOS OS MÓDULOS AO INICIAR
     const hoje = new Date();
     document.getElementById('dataEnsaio').valueAsDate = hoje;
     document.getElementById('calData').valueAsDate = hoje;
@@ -374,8 +372,7 @@
         const gc = (densidadeSecaCampo * 100000 / dMaxLab);
         const desvio = umidadeReal - hOtima;
         
-        // Definição dinâmica da tolerância conforme as especificações solicitadas
-        let tolerancia = 3; // Aterro por padrão
+        let tolerancia = 3; 
         let labelCamada = "ATERRO";
         
         if (modoInSituAtual === 'cft') {
@@ -466,7 +463,7 @@
     }
 
     // ==========================================
-    // LÓGICA COLETAS DE TAXAS (COM DATA ATUAL)
+    // LÓGICA COLETAS DE TAXAS (COM AS NOVAS FÓRMULAS)
     // ==========================================
     function addTaxaRow(tipo) {
         const prefix = tipo.toLowerCase();
@@ -484,10 +481,19 @@
         const tara = parseFloat(document.getElementById(`${prefix}Tara`).value);
         const bruta = parseFloat(document.getElementById(`${prefix}MassaBruta`).value);
 
-        if(isNaN(bruta) || isNaN(area) || isNaN(tara)) { alert("Preencha todos os campos numericos corretamente."); return; }
+        if(isNaN(bruta) || isNaN(area) || isNaN(tara)) { alert("Preencha todos os campos numéricos corretamente."); return; }
 
         const pesoLiquidoG = bruta - tara;
-        const taxaCalculadaPorcentagem = (pesoLiquidoG / area) / 1000 * 100; 
+        
+        // APLICAÇÃO DAS TRÊS NOVAS FÓRMULAS ATUALIZADAS
+        let taxaCalculadaPorcentagem = 0;
+        if (tipo === 'Cimento') {
+            taxaCalculadaPorcentagem = pesoLiquidoG / (area * 1900 * 2);
+        } else if (tipo === 'Cal') {
+            taxaCalculadaPorcentagem = pesoLiquidoG / (area * 1620 * 2);
+        } else if (tipo === 'Pintura') {
+            taxaCalculadaPorcentagem = pesoLiquidoG / 900;
+        }
 
         let statusPonto = "❌";
         let localInfo = "";
