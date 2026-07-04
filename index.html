@@ -352,6 +352,13 @@
         document.getElementById('btnCft').classList.toggle('active', modo === 'cft');
         document.getElementById('btnSubBase').classList.toggle('active', modo === 'subbase');
         document.getElementById('btnBase').classList.toggle('active', modo === 'base');
+
+        // Limpa o resultado anterior e esconde os blocos
+        document.getElementById('resultadoInSitu').style.display = 'none';
+        document.getElementById('detalhesInSitu').innerHTML = '';
+        document.getElementById('statusFinalInSitu').className = 'status';
+        document.getElementById('statusFinalInSitu').innerHTML = '';
+        document.getElementById('btnPrepPrintInSitu').style.display = 'none';
     }
 
     function calcularInSitu() {
