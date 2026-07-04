@@ -495,7 +495,7 @@
         } else if (tipo === 'Cal') {
             taxaCalculadaPorcentagem = pesoLiquidoG / (area * 1620 * 2);
         } else if (tipo === 'Pintura') {
-            taxaCalculadaPorcentagem = pesoLiquidoG / (area / 1000);
+            taxaCalculadaPorcentagem = (pesoLiquidoG / area) / 1000;
         }
 
         let statusPonto = "❌";
