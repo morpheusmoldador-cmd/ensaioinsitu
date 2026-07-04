@@ -491,11 +491,11 @@
         // FÓRMULAS CONFORME ESPECIFICAÇÕES
         let taxaCalculadaPorcentagem = 0;
         if (tipo === 'Cimento') {
-            taxaCalculadaPorcentagem = pesoLiquidoG / (area * 1900 * 2);
+            taxaCalculadaPorcentagem = pesoLiquidoG / (area * 1800 * 2);
         } else if (tipo === 'Cal') {
             taxaCalculadaPorcentagem = pesoLiquidoG / (area * 1620 * 2);
         } else if (tipo === 'Pintura') {
-            taxaCalculadaPorcentagem = pesoLiquidoG / 900;
+            taxaCalculadaPorcentagem = pesoLiquidoG / area;
         }
 
         let statusPonto = "❌";
