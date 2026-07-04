@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Controle de Qualidade</title>
+    <title>Painel de Controle de Engenharia Rodoviária</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -82,7 +82,7 @@
     <div class="container" id="appContent">
         
         <div id="moduloMenu" class="modulo active">
-            <h2>Painel Controle de Qualidade</h2>
+            <h2>Painel Rodoviário Pro</h2>
             <div class="menu-grid">
                 <button class="btn-menu" onclick="navegarPara('moduloInSitu')">Ensaio In Situ<br><small>(Densidade)</small></button>
                 <button class="btn-menu" onclick="navegarPara('moduloBenkelman')">Viga Benkelman</button>
@@ -463,10 +463,13 @@
     }
 
     // ==========================================
-    // LÓGICA COLETAS DE TAXAS (COM AS NOVAS FÓRMULAS)
+    // LÓGICA COLETAS DE TAXAS UNIFICADA
     // ==========================================
     function addTaxaRow(tipo) {
-        const prefix = tipo.toLowerCase();
+        // Define o prefixo correto com base no ID do HTML de cada módulo
+        let prefix = "cal";
+        if (tipo === 'Cimento') prefix = "cim";
+        if (tipo === 'Pintura') prefix = "pin";
         
         const dataInput = document.getElementById(`${prefix}Data`).value;
         let dataFormatada = "---";
@@ -485,7 +488,7 @@
 
         const pesoLiquidoG = bruta - tara;
         
-        // APLICAÇÃO DAS TRÊS NOVAS FÓRMULAS ATUALIZADAS
+        // FÓRMULAS CONFORME ESPECIFICAÇÕES
         let taxaCalculadaPorcentagem = 0;
         if (tipo === 'Cimento') {
             taxaCalculadaPorcentagem = pesoLiquidoG / (area * 1900 * 2);
